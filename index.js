@@ -27,6 +27,7 @@ async function fetchBTCPrice() {
   try {
     const response = await fetch(
       "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+      // "https://api.binance.com/api/v3/ticker/price?symbol=SEIUSDT"
     );
     const data = await response.json();
     stockData.BTC.price = parseFloat(data.price);
@@ -40,6 +41,7 @@ async function analyzeOrderBook() {
   try {
     const response = await fetch(
       "https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=100"
+      // "https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=100"
     );
     const data = await response.json();
 
