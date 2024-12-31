@@ -37,16 +37,66 @@ async function fetchBTCPrice() {
 }
 
 // Fetch order book from Binance API and analyze
+// async function analyzeOrderBook() {
+//   try {
+//     const response = await fetch(
+//       "https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=100"
+//       // "https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=100"
+//     );
+//     const data = await response.json();
+
+//     const currentPrice = stockData.BTC.price;
+//     if (currentPrice > 0) {
+//       const ordersBelowPrice = data.bids.filter(
+//         ([price]) => parseFloat(price) < currentPrice
+//       );
+//       const ordersAbovePrice = data.asks.filter(
+//         ([price]) => parseFloat(price) > currentPrice
+//       );
+
+//       stockData.BTC.ordersBelowPrice = ordersBelowPrice.length;
+//       stockData.BTC.ordersAbovePrice = ordersAbovePrice.length;
+
+//       // Group bids and asks by price
+//       const groupedBids = {};
+//       const groupedAsks = {};
+
+//       data.bids.forEach(([price, volume]) => {
+//         const roundedPrice = Math.floor(parseFloat(price));
+//         groupedBids[roundedPrice] = (groupedBids[roundedPrice] || 0) + 1;
+//       });
+
+//       data.asks.forEach(([price, volume]) => {
+//         const roundedPrice = Math.floor(parseFloat(price));
+//         groupedAsks[roundedPrice] = (groupedAsks[roundedPrice] || 0) + 1;
+//       });
+
+//       // Include detailed order book data
+//       stockData.BTC.orderBook = {
+//         bids: Object.entries(groupedBids).map(([price, count]) => ({
+//           price: parseInt(price),
+//           count: count,
+//         })),
+//         asks: Object.entries(groupedAsks).map(([price, count]) => ({
+//           price: parseInt(price),
+//           count: count,
+//         })),
+//       };
+//     }
+//   } catch (error) {
+//     console.error("Error fetching order book:", error.message);
+//   }
+// }
 async function analyzeOrderBook() {
   try {
     const response = await fetch(
       "https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=100"
-      // "https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=100"
     );
     const data = await response.json();
 
     const currentPrice = stockData.BTC.price;
     if (currentPrice > 0) {
+      // Count exact number of orders below and above the current price
       const ordersBelowPrice = data.bids.filter(
         ([price]) => parseFloat(price) < currentPrice
       );
@@ -54,8 +104,15 @@ async function analyzeOrderBook() {
         ([price]) => parseFloat(price) > currentPrice
       );
 
-      stockData.BTC.ordersBelowPrice = ordersBelowPrice.length;
-      stockData.BTC.ordersAbovePrice = ordersAbovePrice.length;
+      stockData.BTC.ordersBelowPrice = ordersBelowPrice.reduce(
+        (totalOrders, [_, volume]) => totalOrders + parseFloat(volume),
+        0
+      );
+
+      stockData.BTC.ordersAbovePrice = ordersAbovePrice.reduce(
+        (totalOrders, [_, volume]) => totalOrders + parseFloat(volume),
+        0
+      );
 
       // Group bids and asks by price
       const groupedBids = {};
@@ -63,12 +120,14 @@ async function analyzeOrderBook() {
 
       data.bids.forEach(([price, volume]) => {
         const roundedPrice = Math.floor(parseFloat(price));
-        groupedBids[roundedPrice] = (groupedBids[roundedPrice] || 0) + 1;
+        groupedBids[roundedPrice] =
+          (groupedBids[roundedPrice] || 0) + parseFloat(volume);
       });
 
       data.asks.forEach(([price, volume]) => {
         const roundedPrice = Math.floor(parseFloat(price));
-        groupedAsks[roundedPrice] = (groupedAsks[roundedPrice] || 0) + 1;
+        groupedAsks[roundedPrice] =
+          (groupedAsks[roundedPrice] || 0) + parseFloat(volume);
       });
 
       // Include detailed order book data
